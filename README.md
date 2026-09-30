@@ -2,6 +2,8 @@
 
 `gw-wallet` is a Go HTTP service for user accounts, multi-currency wallets, and currency exchange. It stores users and wallet balances in PostgreSQL, publishes wallet events through NATS JetStream, and calls a separate gRPC exchange service for rates and conversions.
 
+> Part of the **GW stack** — see the [general deployment repository](https://github.com/MacPiggins/gw-deploy) for deployment configuration and infrastructure.
+
 ## Features
 
 - User registration and JWT-based login
