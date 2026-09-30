@@ -1,0 +1,22 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE IF NOT EXISTS Users
+(
+    Username TEXT PRIMARY KEY,
+    Password TEXT NOT NULL,
+    Email    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS Wallets
+(
+    Username TEXT PRIMARY KEY REFERENCES Users,
+    Usd      BIGINT NOT NULL DEFAULT 0 CHECK ( Usd >= 0 ),
+    Rub      BIGINT NOT NULL DEFAULT 0 CHECK ( Rub >= 0 ),
+    Eur      BIGINT NOT NULL DEFAULT 0 CHECK ( Eur >= 0 )
+);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE Wallets;
+DROP TABLE Users;
+-- +goose StatementEnd

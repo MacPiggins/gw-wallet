@@ -1,0 +1,59 @@
+services:
+  wallet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      NATSCONNSTR: nats://nats:4222
+      NATSSTREAM: ${NATSSTREAM:-wallet}
+      STORAGECONNSTR: postgres://wallet:wallet@postgres:5432/wallet?sslmode=disable
+      SERVERADDR: ${SERVERADDR:-localhost:8080}
+      # The exchange service runs outside this Compose project by default.
+      EXCHANGEADDR: ${EXCHANGEADDR:-host.docker.internal:8081}
+      AUTHSECRET: ${AUTHSECRET:-development-secret}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${SERVERADDR:-localhost:8080}:${SERVERADDR:-localhost:8080}"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wallet
+      POSTGRES_USER: wallet
+      POSTGRES_PASSWORD: wallet
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet -d wallet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    image: nats:2-alpine
+    restart: unless-stopped
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  nats_data:
